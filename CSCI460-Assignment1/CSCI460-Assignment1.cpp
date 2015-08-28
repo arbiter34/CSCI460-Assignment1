@@ -209,6 +209,7 @@ void StartProcess(HWND hWnd) {
 	processor->running = true;
 	cpuThreadHandle = CreateThread(0, 0, RunProcessor, NULL, 0, &cpuThreadId);
 	loadBinaryThreadHandle = CreateThread(0, 0, StepProcessor, NULL, 0, &loadBinaryThreadId);
+	
 }
 
 void StopProcess() {

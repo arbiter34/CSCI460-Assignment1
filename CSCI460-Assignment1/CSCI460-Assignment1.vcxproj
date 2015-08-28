@@ -149,7 +149,6 @@
     <ClInclude Include="CSCI460-Assignment1.h" />
     <ClInclude Include="Job.h" />
     <ClInclude Include="JobFactory.h" />
-    <ClInclude Include="JobList.h" />
     <ClInclude Include="Processor.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
@@ -159,7 +158,6 @@
     <ClCompile Include="CSCI460-Assignment1.cpp" />
     <ClCompile Include="Job.cpp" />
     <ClCompile Include="JobFactory.cpp" />
-    <ClCompile Include="JobList.cpp" />
     <ClCompile Include="Processor.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

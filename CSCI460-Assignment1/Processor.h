@@ -1,6 +1,6 @@
 #pragma once
 #include "Job.h"
-#include <queue>
+#include <vector>
 #include <mutex>
 
 #define SLEEP_TIME 1
@@ -38,6 +38,6 @@ private:
 	int jobCount;
 
 	//Process Queue
-	std::queue<Job*> *coreQueues;
+	std::vector<Job*> *coreQueues;
 };
 

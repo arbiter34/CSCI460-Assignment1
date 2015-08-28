@@ -10,7 +10,7 @@ Processor::Processor()
 	numCores = (7084 % 3) + 2;
 
 	//Create process queues
-	coreQueues = new std::queue<Job*>[numCores];
+	coreQueues = new std::vector<Job*>[numCores];
 
 	//Init vars
 	jobCount = 0;
@@ -34,9 +34,9 @@ void Processor::LoadBinary(Job *job)
 	//Lock Mutex
 	WaitForSingleObject(hMutex, INFINITE);
 	//Push Job object into next core's queue
-	(coreQueues[jobCount % numCores]).push(job);
+	(coreQueues[jobCount % numCores]).push_back(job);
 	//+1 Tick
-	actualTime++;
+	//actualTime++;
 	//Unlock Mutex
 	ReleaseMutex(hMutex);
 
@@ -76,7 +76,7 @@ void __cdecl odprintf(const char *format, ...)
 int Processor::RunProcessor()
 {
 	//Declare/Init Vars
-	int sleepTime = 0;
+	int sleepTime = 0, jobIndex = 0;
 	bool queuesEmpty = true, jobStarted = false;
 	LARGE_INTEGER StartingTime, EndingTime, ElapsedMicroseconds, Frequency;
 
@@ -101,7 +101,7 @@ int Processor::RunProcessor()
 				continue;
 			}
 			//Get reference to job at front of current queue
-			Job *job = (coreQueues[i].front());
+			Job *job = (coreQueues[i][jobIndex%coreQueues[i].size()]);
 			//Unlock Mutex
 			ReleaseMutex(hMutex);
 
@@ -115,9 +115,10 @@ int Processor::RunProcessor()
 
 				//If Ticks left == 0 - Move to Next Job
 				if (job->jobTime <= 0) {
-					coreQueues[i].pop();
+					(coreQueues[i]).erase(coreQueues[i].begin()+(jobIndex%coreQueues[i].size()));
 				}
 			}
+			jobIndex++;
 		}
 		//Lock Mutex
 		WaitForSingleObject(hMutex, INFINITE);

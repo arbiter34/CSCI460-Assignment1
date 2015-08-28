@@ -7,20 +7,23 @@ HANDLE Processor::hMutex = CreateMutex(NULL, FALSE, NULL);
 Processor::Processor()
 {
 	//Set number of cores
-	numCores = (7084 % 3) + 2;
+	//numCores = (7084 % 3) + 2;
+	numCores = 5;
+}
 
+
+Processor::~Processor()
+{
+}
+
+void Processor::Init() {
 	//Create process queues
 	coreQueues = new std::queue<Job*>[numCores];
 
 	//Init vars
 	jobCount = 0;
 	optimalTime = 0;
-	actualTime = 0;
-}
-
-
-Processor::~Processor()
-{
+	tickCount = 0;
 }
 
 /*  
@@ -35,11 +38,18 @@ void Processor::LoadBinary(Job *job)
 	WaitForSingleObject(hMutex, INFINITE);
 	//Push Job object into next core's queue
 	(coreQueues[jobCount % numCores]).push(job);
-	//+1 Tick
-	actualTime++;
+
+	//Reset Tick Counter
+	if (jobCount == 0) {
+		tickCount = 0;
+	}
+
+	if (jobCount % numCores == 3) {
+		numCores = numCores;
+	}
+
 	//Unlock Mutex
 	ReleaseMutex(hMutex);
-
 	//Increment job counter
 	jobCount++;
 }
@@ -86,6 +96,11 @@ int Processor::RunProcessor()
 
 	//Main Control Loop
 	while (running || !queuesEmpty) {
+		//Lock Mutex
+		WaitForSingleObject(hMutex, INFINITE);
+		//Unlock Mutex
+		ReleaseMutex(hMutex);
+
 		//Start assuming queues are empty
 		queuesEmpty = true;
 
@@ -100,6 +115,12 @@ int Processor::RunProcessor()
 				ReleaseMutex(hMutex);
 				continue;
 			}
+
+			//if (!jobStarted) {
+			//	jobStarted = true;
+			//	//Hack to start tickCount correctly - 1 tick per job load
+			//	tickCount = jobCount;
+			//}
 			//Get reference to job at front of current queue
 			Job *job = (coreQueues[i].front());
 			//Unlock Mutex
@@ -119,12 +140,10 @@ int Processor::RunProcessor()
 				}
 			}
 		}
-		//Lock Mutex
-		WaitForSingleObject(hMutex, INFINITE);
+
 		//Increment Tick Counter
-		actualTime++;
-		//Unlock Mutex
-		ReleaseMutex(hMutex);
+		tickCount++;
+		Sleep(0);
 	}
 
 	//High-Res Time-Stamp Functions
@@ -135,8 +154,8 @@ int Processor::RunProcessor()
 
 	//Debug Print Results
 	odprintf("Runtime: %lld microseconds", ElapsedMicroseconds.QuadPart);
-	odprintf("Virtual Runtime: %ld", actualTime);
-	odprintf("Perfect Runtime: %ld", (optimalTime / numCores) + jobCount);
+	odprintf("Virtual Runtime: %ld", tickCount);
+	odprintf("Perfect Runtime: %ld", (optimalTime / numCores));
 
 	return 0;
 }

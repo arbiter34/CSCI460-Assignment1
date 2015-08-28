@@ -36,9 +36,6 @@
     <ClInclude Include="Processor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="JobList.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="JobFactory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -54,9 +51,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Processor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="JobList.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="JobFactory.cpp">

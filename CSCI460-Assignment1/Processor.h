@@ -22,10 +22,12 @@ public:
 	long int optimalTime;
 
 	//Achieved RunTime
-	long int actualTime;
+	long int tickCount;
 
 	Processor();
 	~Processor();
+
+	void Init();
 
 	//Load a Job into Next Core Queue - Thread Safe
 	void LoadBinary(Job *job);

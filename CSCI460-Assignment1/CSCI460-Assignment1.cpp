@@ -6,7 +6,6 @@
 #include "CSCI460-Assignment1.h"
 #include "Processor.h"
 #include "Job.h"
-#include "JobList.h"
 #include "JobFactory.h"
 
 #define MAX_LOADSTRING 100
@@ -23,8 +22,11 @@ HANDLE loadBinaryThreadHandle;
 DWORD cpuThreadId;
 DWORD loadBinaryThreadId;
 Job **jobList;
-int index = 0;
-int numJobs = 1000;
+int index;
+int numJobs;
+
+long int runningAvg = 0;
+int runCount = 0;
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -117,7 +119,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    hInst = hInstance; // Store instance handle in our global variable
 
    HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
+      200, 200, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
 
    if (!hWnd)
    {
@@ -204,32 +206,77 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     return (INT_PTR)FALSE;
 }
 
+/*
+*  odprintf - printf like debug printer
+*/
+void __cdecl odprintfs(const char *format, ...)
+{
+	char    buf[4096], *p = buf;
+	va_list args;
+	int     n;
+
+	va_start(args, format);
+	n = _vsnprintf(p, sizeof buf - 3, format, args); // buf-3 is room for CR/LF/NUL
+	va_end(args);
+
+	p += (n < 0) ? sizeof buf - 3 : n;
+
+	while (p > buf  &&  isspace(p[-1]))
+		*--p = '\0';
+
+	*p++ = '\r';
+	*p++ = '\n';
+	*p = '\0';
+
+	OutputDebugStringA(buf);
+}
+
 void StartProcess(HWND hWnd) {
-	jobList = JobFactory::buildJobList(numJobs);
+	processor->Init();
+	//Generate Job List
+	jobList = JobFactory::getSetJobList();
+	index = 0;
+	numJobs = 12;
+	//jobList = JobFactory::buildJobList(numJobs);
+
+	//Set thread running to true
 	processor->running = true;
+	
+	//Start CPU Thread
 	cpuThreadHandle = CreateThread(0, 0, RunProcessor, NULL, 0, &cpuThreadId);
+
+	//Start LoadingBinary Thread
 	loadBinaryThreadHandle = CreateThread(0, 0, StepProcessor, NULL, 0, &loadBinaryThreadId);
 }
 
+/* Kill Processor Thread (Not Immediate, will exit when job Queue is empty) */
 void StopProcess() {
-	timeKillEvent(cpuTimerId);
 	processor->running = false;
 }
 
+/* Thread to run the processor loop */
 DWORD WINAPI RunProcessor(LPVOID lpParameter) {
 	return processor->RunProcessor();
 }
 
+
+/* Thread for Loading Jobs */
 DWORD WINAPI StepProcessor(LPVOID lpParameter) {
 	while (index < numJobs) {
 		for (int i = index; i < numJobs; i++) {
-			jobList[i]->arrivalTime--;
-			if (jobList[i]->arrivalTime == 0) {
+			if (jobList[i]->arrivalTime <= processor->tickCount) {
 				processor->LoadBinary(jobList[i]);
 				index++;
 			}
 		}
 	}
 	StopProcess();
+
+	//Thread join with CPU Thread - This is just so we can grab turn-around time
+	WaitForSingleObject(cpuThreadHandle, INFINITE);
+
+	runningAvg = ((runningAvg * runCount) + processor->tickCount) / (runCount + 1);
+	
+
 	return 0;
 }

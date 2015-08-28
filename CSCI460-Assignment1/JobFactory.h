@@ -8,5 +8,7 @@ class JobFactory
 {
 public:
 	static Job** buildJobList(int num);
+	static Job** getSetJobList();
+	static Job* jobList[];
 };
 
